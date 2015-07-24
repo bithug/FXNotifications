@@ -54,11 +54,22 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
 @property (nonatomic, weak) NSObject *observer;
 @property (nonatomic, weak) NSObject *object;
 @property (nonatomic, copy) NSString *name;
-@property (nonatomic, copy) FXNotificationBlock block;
-@property (nonatomic, strong) NSOperationQueue *queue;
 @property (nonatomic, weak) NSNotificationCenter *center;
 
+@end
+
+@interface FXBlockBasedNotificationObserver : FXNotificationObserver
+
+@property (nonatomic, copy) FXNotificationBlock block;
+@property (nonatomic, strong) NSOperationQueue *queue;
+
 - (void)action:(NSNotification *)note;
+
+@end
+
+@interface FXSelectorBasedNotificationObserver : FXNotificationObserver
+
+@property (nonatomic, assign) SEL selector;
 
 @end
 
@@ -100,6 +111,16 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
 
 @implementation FXNotificationObserver
 
+- (void)dealloc
+{
+    __strong NSNotificationCenter *strongCenter = _center;
+    [strongCenter removeObserver:self];
+}
+
+@end
+
+@implementation FXBlockBasedNotificationObserver
+
 - (void)action:(NSNotification *)note
 {
     __strong id strongObserver = self.observer;
@@ -118,10 +139,25 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
     }
 }
 
-- (void)dealloc
+@end
+
+@implementation FXSelectorBasedNotificationObserver
+
+- (id)forwardingTargetForSelector:(SEL)aSelector
 {
-    __strong NSNotificationCenter *strongCenter = _center;
-    [strongCenter removeObserver:self];
+    if (aSelector == self.selector) {
+        __strong id observer = self.observer;
+        return observer;
+    } else {
+        return [super forwardingTargetForSelector:aSelector];
+    }
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    if (anInvocation.selector != self.selector) {
+        [super forwardInvocation:anInvocation];
+    }
 }
 
 @end
@@ -143,7 +179,7 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
             queue:(NSOperationQueue *)queue
        usingBlock:(FXNotificationBlock)block
 {
-    FXNotificationObserver *container = [[FXNotificationObserver alloc] init];
+    FXBlockBasedNotificationObserver *container = [[FXBlockBasedNotificationObserver alloc] init];
     container.observer = observer;
     container.object = object;
     container.name = name;
@@ -153,6 +189,23 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
     
     [observer FXNotifications_addObserver:container];
     [self addObserver:container selector:@selector(action:) name:name object:object];
+    return container;
+}
+
+- (id)addWeakObserver:(id)observer
+             selector:(SEL)aSelector
+                 name:(NSString *)aName
+               object:(id)anObject
+{
+    FXSelectorBasedNotificationObserver *container = [[FXSelectorBasedNotificationObserver alloc] init];
+    container.observer = observer;
+    container.object = anObject;
+    container.name = aName;
+    container.center = self;
+    container.selector = aSelector;
+    
+    [observer FXNotifications_addObserver:container];
+    [self addObserver:container selector:aSelector name:aName object:anObject];
     return container;
 }
 
