@@ -13,10 +13,47 @@
 static NSString *const IncrementCountNotification = @"IncrementCountNotification";
 
 
+
+@interface SomeObject : NSObject
+
+@end
+
+@implementation SomeObject
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        // We must not forget to remove observer sometime after this call
+        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(action:) name:IncrementCountNotification object:nil];
+        
+        // No need to remove observer
+        [[NSNotificationCenter defaultCenter] addWeakObserver:self selector:@selector(action:) name:IncrementCountNotification object:nil];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    // Since we add weak observer in init, there's no need to remove it in dealloc
+    //[[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)action:(NSNotification *)note
+{
+    NSLog(@"Increment in SomeObserver, note.obj - %@", note.object);
+}
+
+@end
+
+
+
+
 @interface ViewController ()
 
 @property (nonatomic, strong) IBOutlet UILabel *label;
 @property (nonatomic, assign) NSInteger count;
+@property (nonatomic, strong) SomeObject *object;
 
 @end
 
@@ -45,6 +82,8 @@ static NSString *const IncrementCountNotification = @"IncrementCountNotification
 //        UILabel *label = note.object;
 //        label.text = [NSString stringWithFormat:@"Presses: %@", @(++self.count)];
 //    }];
+    
+    self.object = [SomeObject new];
     
     //using the FXNotifications method, this approach doesn't leak and just works as expected
     [[NSNotificationCenter defaultCenter] addObserver:self
