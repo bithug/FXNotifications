@@ -1,7 +1,7 @@
 Purpose
 --------------
 
-FXNotifications is a category on `NSNotificationCenter` that provides an improved block-based API that is simpler and easier to use, and avoids the various retain cycle and memory leak pitfalls of the official API.
+FXNotifications is a category on `NSNotificationCenter` that provides an improved API (selector-based and block-based) that is simpler and easier to use, and avoids the various retain cycle and memory leak pitfalls of the official API.
 
 For more details, see this article: http://sealedabstract.com/code/nsnotificationcenter-with-blocks-considered-harmful/ and this gist: https://gist.github.com/nicklockwood/7559729
 
@@ -37,8 +37,9 @@ To use FXNotifications, just drag the FXNotifications.h and .m files into your p
 Methods
 ------------
 
-FXNotifications extends NSNotificationCenter with a single method
+FXNotifications extends NSNotificationCenter with two methods:
 
+##### Block-based API
     - (id)addObserver:(id)observer
               forName:(NSString *)name
                object:(id)object
@@ -48,14 +49,6 @@ FXNotifications extends NSNotificationCenter with a single method
 This method is a hybrid of the two built-in notification observer methods. The observer parameter is required, and represents the owner of the block argument. When the observer is released, the block will be released as well.
 
 The name, object, queue and block arguments work as they do in the normal block-based observer method. The queue parameter is optional - if nil is passed then the block will be executed on whichever queue the notification is posted from. To avoid retain cycles in your block, you can refer to the weak observer parameter that is passed as a second argument.
-
-The method returns a token value that can be used to stop observing the notification, use the standard `-removeObserver:` method  of `NSNotificationCenter`, e.g.
-
-    [[NSNotificationCenter defaultCenter] removeObserver:token];
-    
-However, you can simply discard this token and the token will be deregistered automatically when the observer is released. There is no need to call removeObserver: in the observer's dealloc method; this is done automatically.
-
-Also, if you wish, you can deregister the observer itself using the `-removeObserver:` or `-removeObserver:name:object:` methods of `NSNotificationCenter`, so the only reason to store the token is if you wish to distinguish between multiple registrations of the same observer with the same selector.
 
 A typical usage might be:
 
@@ -68,8 +61,49 @@ A typical usage might be:
                                                       }];
                                                       
 
+##### Weak observer
+
+    - (id)addWeakObserver:(id)observer
+                 selector:(SEL)aSelector
+                     name:(NSString *)aName
+                   object:(id)anObject;
+                   
+This method is almost the same as the built-in method `- addObserver:selector:name:object:` except for `weak` prefix. It uses ARC's weak references to store the reference to the observer. This means that after observer deallocation, the reference will be nillify and application won't crash upon posting observer's notification. 
+
+So, there is no need to call `- removeObserver:` or `- removeObserver:name:object:` after adding weak observer.
+
+The method specified by `aSelector` will be called on the same queue the notification was posted on.
+
+A typical usage might be:
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleMemoryWarningNotification:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+    }
+    
+    - (void)handleMemoryWarningNotification:(NSNotification *)notification
+    {
+        //...
+    }
+
+##### Observer deregistration
+
+The methods return a token value that can be used to stop observing the notification, use the standard `-removeObserver:` method  of `NSNotificationCenter`, e.g.
+
+    [[NSNotificationCenter defaultCenter] removeObserver:token];
+    
+However, you can simply discard this token and the token will be deregistered automatically when the observer is released. There is no need to call removeObserver: in the observer's dealloc method; this is done automatically.
+
+Also, if you wish, you can deregister the observer itself using the `-removeObserver:` or `-removeObserver:name:object:` methods of `NSNotificationCenter`, so the only reason to store the token is if you wish to distinguish between multiple registrations of the same observer with the same selector.
+
+
 Release Notes
 -------------------
+
+Version 1.2
+
+- Added weak observers
 
 Version 1.1
 
