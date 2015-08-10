@@ -69,7 +69,9 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
 
 @interface FXSelectorBasedNotificationObserver : FXNotificationObserver
 
-@property (nonatomic, assign) SEL selector;
+@property (nonatomic, assign) SEL originalSelector;
+@property (nonatomic, assign) SEL unrecognizedSelector;
+@property (nonatomic, strong) NSMethodSignature *originalMethodSignature;
 
 @end
 
@@ -145,9 +147,13 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
 
 - (id)forwardingTargetForSelector:(SEL)aSelector
 {
-    if (aSelector == self.selector) {
+    if (aSelector == self.unrecognizedSelector) {
         __strong id observer = self.observer;
-        return observer;
+        id target = nil;
+        if (self.unrecognizedSelector == self.originalSelector) {
+            target = observer;
+        }
+        return target;
     } else {
         return [super forwardingTargetForSelector:aSelector];
     }
@@ -155,9 +161,23 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    if (anInvocation.selector != self.selector) {
+    if (anInvocation.selector == self.unrecognizedSelector) {
+        __strong id observer = self.observer;
+        if (nil != observer) {
+            anInvocation.selector = self.originalSelector;
+            [anInvocation invokeWithTarget:observer];
+        }
+    } else {
         [super forwardInvocation:anInvocation];
     }
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    if (aSelector == self.unrecognizedSelector) {
+        return self.originalMethodSignature;
+    }
+    return [super methodSignatureForSelector:aSelector];
 }
 
 @end
@@ -202,10 +222,19 @@ typedef void (^FXNotificationBlock)(NSNotification *note, id observer);
     container.object = anObject;
     container.name = aName;
     container.center = self;
-    container.selector = aSelector;
+    container.originalMethodSignature = [observer methodSignatureForSelector:aSelector];
+    container.originalSelector = aSelector;
+    
+    SEL unrecognizedSelector = aSelector;
+    while ([container respondsToSelector:unrecognizedSelector]) {
+        NSString *strSelector = NSStringFromSelector(unrecognizedSelector);
+        strSelector = [@"fx_" stringByAppendingString:strSelector];
+        unrecognizedSelector = NSSelectorFromString(strSelector);
+    }
+    container.unrecognizedSelector = unrecognizedSelector;
     
     [observer FXNotifications_addObserver:container];
-    [self addObserver:container selector:aSelector name:aName object:anObject];
+    [self addObserver:container selector:unrecognizedSelector name:aName object:anObject];
     return container;
 }
 
