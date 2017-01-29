@@ -39,17 +39,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSNotificationCenter (FXNotifications)
 
-- (id)addObserver:(id)observer
-          forName:(nullable NSString *)name
-           object:(nullable id)object
-            queue:(nullable NSOperationQueue *)queue
-       usingBlock:(void (^)(NSNotification *note, id observer))block;
+- (id)fx_addObserver:(id)observer
+             forName:(nullable NSString *)name
+              object:(nullable id)object
+               queue:(nullable NSOperationQueue *)queue
+          usingBlock:(void (^)(NSNotification *note, id observer))block;
 
 
-- (id)addWeakObserver:(id)observer
-             selector:(SEL)aSelector
-                 name:(NSString *)aName
-               object:(id)anObject;
+- (id)fx_addObserver:(id)observer
+            selector:(SEL)aSelector
+                name:(NSString *)aName
+              object:(id)anObject;
 
 @end
 

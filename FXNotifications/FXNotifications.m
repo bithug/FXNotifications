@@ -174,11 +174,11 @@ static NSMutableArray *FXNotificationsGetObservers(id object, BOOL create)
                                    class_getInstanceMethod(self, replacement));
 }
 
-- (id)addObserver:(id)observer
-          forName:(nullable NSString *)name
-           object:(nullable id)object
-            queue:(nullable NSOperationQueue *)queue
-       usingBlock:(FXNotificationBlock)block
+- (id)fx_addObserver:(id)observer
+             forName:(nullable NSString *)name
+              object:(nullable id)object
+               queue:(nullable NSOperationQueue *)queue
+          usingBlock:(FXNotificationBlock)block
 {
     FXBlockBasedNotificationObserver *container = [[FXBlockBasedNotificationObserver alloc] init];
     container.observer = observer;
@@ -193,10 +193,10 @@ static NSMutableArray *FXNotificationsGetObservers(id object, BOOL create)
     return container;
 }
 
-- (id)addWeakObserver:(id)observer
-             selector:(SEL)aSelector
-                 name:(NSString *)aName
-               object:(id)anObject
+- (id)fx_addObserver:(id)observer
+            selector:(SEL)aSelector
+                name:(NSString *)aName
+              object:(id)anObject
 {
     FXSelectorBasedNotificationObserver *container = [[FXSelectorBasedNotificationObserver alloc] init];
     container.observer = observer;
