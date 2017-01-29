@@ -48,8 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id)fx_addObserver:(id)observer
             selector:(SEL)aSelector
-                name:(NSString *)aName
-              object:(id)anObject;
+                name:(nullable NSString *)aName
+              object:(nullable id)anObject;
 
 @end
 

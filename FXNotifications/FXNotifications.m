@@ -195,8 +195,8 @@ static NSMutableArray *FXNotificationsGetObservers(id object, BOOL create)
 
 - (id)fx_addObserver:(id)observer
             selector:(SEL)aSelector
-                name:(NSString *)aName
-              object:(id)anObject
+                name:(nullable NSString *)aName
+              object:(nullable id)anObject
 {
     FXSelectorBasedNotificationObserver *container = [[FXSelectorBasedNotificationObserver alloc] init];
     container.observer = observer;
