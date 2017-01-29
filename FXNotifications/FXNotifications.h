@@ -45,6 +45,12 @@ NS_ASSUME_NONNULL_BEGIN
             queue:(nullable NSOperationQueue *)queue
        usingBlock:(void (^)(NSNotification *note, id observer))block;
 
+
+- (id)addWeakObserver:(id)observer
+             selector:(SEL)aSelector
+                 name:(NSString *)aName
+               object:(id)anObject;
+
 @end
 
 #pragma GCC diagnostic pop
