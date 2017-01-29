@@ -28,7 +28,7 @@ static NSString *const IncrementCountNotification = @"IncrementCountNotification
         //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(action:) name:IncrementCountNotification object:nil];
         
         // No need to remove observer
-        [[NSNotificationCenter defaultCenter] addWeakObserver:self selector:@selector(action:) name:IncrementCountNotification object:nil];
+        [[NSNotificationCenter defaultCenter] fx_addObserver:self selector:@selector(action:) name:IncrementCountNotification object:nil];
     }
     return self;
 }
@@ -86,15 +86,15 @@ static NSString *const IncrementCountNotification = @"IncrementCountNotification
     self.object = [SomeObject new];
     
     //using the FXNotifications method, this approach doesn't leak and just works as expected
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                              forName:IncrementCountNotification
-                                               object:self.label
-                                                queue:[NSOperationQueue mainQueue]
-                                           usingBlock:^(NSNotification *note, ViewController *observer) {
-                                               
-                                               UILabel *label = note.object;
-                                               label.text = [NSString stringWithFormat:@"Presses: %@", @(++observer.count)];
-                                           }];
+    [[NSNotificationCenter defaultCenter] fx_addObserver:self
+                                                 forName:IncrementCountNotification
+                                                  object:self.label
+                                                   queue:[NSOperationQueue mainQueue]
+                                              usingBlock:^(NSNotification *note, ViewController *observer) {
+                                                  
+                                                  UILabel *label = note.object;
+                                                  label.text = [NSString stringWithFormat:@"Presses: %@", @(++observer.count)];
+                                              }];
 }
 
 - (IBAction)removeObserver

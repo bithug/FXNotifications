@@ -40,11 +40,11 @@ Methods
 FXNotifications extends NSNotificationCenter with two methods:
 
 ##### Block-based API
-    - (id)addObserver:(id)observer
-              forName:(nullable NSString *)name
-               object:(nullable id)object
-                queue:(NSOperationQueue *)queue
-           usingBlock:(void (^)(NSNotification *note, id observer))block;
+    - (id)fx_addObserver:(id)observer
+                 forName:(nullable NSString *)name
+                  object:(nullable id)object
+                   queue:(NSOperationQueue *)queue
+              usingBlock:(void (^)(NSNotification *note, id observer))block;
              
 This method is a hybrid of the two built-in notification observer methods. The observer parameter is required, and represents the owner of the block argument. When the observer is released, the block will be released as well.
 
@@ -52,23 +52,23 @@ The name, object, queue and block arguments work as they do in the normal block-
 
 A typical usage might be:
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                              forName:NSSomeNotificationName
-                                               object:nil
-                                                queue:[NSOperationQueue mainQueue]
-                                           usingBlock:^(NSNotification *note, id observer) {
+    [[NSNotificationCenter defaultCenter] fx_addObserver:self
+                                                 forName:NSSomeNotificationName
+                                                  object:nil
+                                                   queue:[NSOperationQueue mainQueue]
+                                              usingBlock:^(NSNotification *note, id observer) {
                                                           NSLog(@"self: %@", observer); // look, no leaks!
                                                       }];
                                                       
 
 ##### Weak observer
 
-    - (id)addWeakObserver:(id)observer
-                 selector:(SEL)aSelector
-                     name:(NSString *)aName
-                   object:(id)anObject;
+    - (id)fx_addObserver:(id)observer
+                selector:(SEL)aSelector
+                    name:(NSString *)aName
+                  object:(id)anObject;
                    
-This method is almost the same as the built-in method `- addObserver:selector:name:object:` except for `weak` prefix. It uses ARC's weak references to store the reference to the observer. This means that after observer deallocation, the reference will be nillify and application won't crash upon posting observer's notification. 
+This method is almost the same as the built-in method `- addObserver:selector:name:object:` except it uses ARC's weak references to store the reference to the observer. This means that after observer deallocation, the reference will be nillify and application won't crash upon posting observer's notification. 
 
 So, there is no need to call `- removeObserver:` or `- removeObserver:name:object:` after adding weak observer.
 
@@ -76,11 +76,11 @@ The method specified by `aSelector` will be called on the same queue the notific
 
 A typical usage might be:
 
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(handleMemoryWarningNotification:)
-                                                     name:UIApplicationDidReceiveMemoryWarningNotification
-                                                   object:nil];
-    }
+        [[NSNotificationCenter defaultCenter] fx_addObserver:self
+                                                    selector:@selector(handleMemoryWarningNotification:)
+                                                        name:UIApplicationDidReceiveMemoryWarningNotification
+                                                      object:nil];
+    
     
     - (void)handleMemoryWarningNotification:(NSNotification *)notification
     {
@@ -103,7 +103,7 @@ Release Notes
 
 Version 1.2
 
-- Added weak observers
+- Added selector-based interface
 
 Version 1.1.1
 
